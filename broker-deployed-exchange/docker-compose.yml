@@ -79,13 +79,10 @@ services:
       SPRING_DATASOURCE_USERNAME: order_user
       SPRING_DATASOURCE_PASSWORD: ${ORDER_DB_PASSWORD}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-      EXCHANGE_API_KEY: ${EXCHANGE_API_KEY:-dev-exchange-key}
-      EXCHANGE_API_SECRET: ${EXCHANGE_API_SECRET:-dev-exchange-secret}
-      EXCHANGE_REST_URL: ${EXCHANGE_REST_URL:-http://localhost:8080/api/v1}
-      EXCHANGE_WS_URI: ${EXCHANGE_WS_URI:-ws://websocket-server:8080/ws}
-    networks:
-      - default
-      - exchange_net
+      EXCHANGE_API_KEY: ${EXCHANGE_API_KEY}
+      EXCHANGE_API_SECRET: ${EXCHANGE_API_SECRET}
+      EXCHANGE_REST_URL: ${EXCHANGE_REST_URL}
+      EXCHANGE_WS_URI: ${EXCHANGE_WS_URI}
     depends_on:
       - order-db
 
@@ -127,17 +124,14 @@ services:
       - "9006:9006"
     environment:
       SERVER_PORT: 9006
-      EXCHANGE_WS_HOST: ${EXCHANGE_WS_URI:-ws://localhost:8080/ws}
-      EXCHANGE_API_KEY: ${EXCHANGE_API_KEY:-dev-exchange-key}
-      EXCHANGE_API_SECRET: ${EXCHANGE_API_SECRET:-dev-exchange-secret}
-      EXCHANGE_REST_URL: ${EXCHANGE_REST_URL:-http://localhost:8080/api/v1}
+      EXCHANGE_WS_HOST: ${EXCHANGE_WS_URI}
+      EXCHANGE_API_KEY: ${EXCHANGE_API_KEY}
+      EXCHANGE_API_SECRET: ${EXCHANGE_API_SECRET}
+      EXCHANGE_REST_URL: ${EXCHANGE_REST_URL}
       JWT_SECRET: ${JWT_SECRET}
       CORS_ALLOWED_ORIGINS: http://localhost:5174,http://localhost:5175
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       ORDER_SERVICE_URL: http://order-service:9003
-    networks:
-      - default
-      - exchange_net
     depends_on:
       - order-service
 
@@ -197,8 +191,3 @@ volumes:
   nextrade_order_db_data:
   nextrade_portfolio_db_data:
   nextrade_fee_db_data:
-
-networks:
-  exchange_net:
-    name: ${EXCHANGE_DOCKER_NETWORK:-final_exchange_default}
-    external: true
