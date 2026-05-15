@@ -1,0 +1,193 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: nextrade-frontend
+    ports:
+      - "5174:5174"
+    environment:
+      VITE_API_BASE_URL: http://localhost:9000/api
+      VITE_NOTIFICATION_WS_URL: ws://localhost:9006
+    depends_on:
+      - api-gateway
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: nextrade-api-gateway
+    ports:
+      - "9000:9000"
+    environment:
+      SERVER_PORT: 9000
+      SERVICES_AUTH_URL: http://auth-service:9001
+      SERVICES_WALLET_URL: http://wallet-service:9002
+      SERVICES_ORDER_URL: http://order-service:9003
+      SERVICES_PORTFOLIO_URL: http://portfolio-service:9004
+      SERVICES_FEE_URL: http://fee-service:9005
+      SERVICES_NOTIFICATION_URL: http://notification-service:9006
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    depends_on:
+      - auth-service
+      - wallet-service
+      - order-service
+      - portfolio-service
+      - fee-service
+      - notification-service
+
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: nextrade-auth-service
+    ports:
+      - "9001:9001"
+    environment:
+      SERVER_PORT: 9001
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/lynx_auth_db
+      SPRING_DATASOURCE_USERNAME: auth_user
+      SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      APP_COOKIE_SECURE: "false"
+    depends_on:
+      - auth-db
+
+  wallet-service:
+    build:
+      context: ./wallet-service
+    container_name: nextrade-wallet-service
+    ports:
+      - "9002:9002"
+    environment:
+      SERVER_PORT: 9002
+      SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-db:5432/lynx_wallet_db
+      SPRING_DATASOURCE_USERNAME: wallet_user
+      SPRING_DATASOURCE_PASSWORD: ${WALLET_DB_PASSWORD}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    depends_on:
+      - wallet-db
+
+  order-service:
+    build:
+      context: ./order-service
+    container_name: nextrade-order-service
+    ports:
+      - "9003:9003"
+    environment:
+      SERVER_PORT: 9003
+      SPRING_DATASOURCE_URL: jdbc:postgresql://order-db:5432/lynx_order_db
+      SPRING_DATASOURCE_USERNAME: order_user
+      SPRING_DATASOURCE_PASSWORD: ${ORDER_DB_PASSWORD}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      EXCHANGE_API_KEY: ${EXCHANGE_API_KEY:-dev-exchange-key}
+      EXCHANGE_API_SECRET: ${EXCHANGE_API_SECRET:-dev-exchange-secret}
+      EXCHANGE_REST_URL: ${EXCHANGE_REST_URL:-http://localhost:8080/api/v1}
+      EXCHANGE_WS_URI: ${EXCHANGE_WS_URI:-ws://localhost:8080/ws}
+    depends_on:
+      - order-db
+
+  portfolio-service:
+    build:
+      context: ./portfolio-service
+    container_name: nextrade-portfolio-service
+    ports:
+      - "9004:9004"
+    environment:
+      SERVER_PORT: 9004
+      SPRING_DATASOURCE_URL: jdbc:postgresql://portfolio-db:5432/lynx_portfolio_db
+      SPRING_DATASOURCE_USERNAME: portfolio_user
+      SPRING_DATASOURCE_PASSWORD: ${PORTFOLIO_DB_PASSWORD}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    depends_on:
+      - portfolio-db
+
+  fee-service:
+    build:
+      context: ./fee-service
+    container_name: nextrade-fee-service
+    ports:
+      - "9005:9005"
+    environment:
+      SERVER_PORT: 9005
+      SPRING_DATASOURCE_URL: jdbc:postgresql://fee-db:5432/lynx_fee_db
+      SPRING_DATASOURCE_USERNAME: fee_user
+      SPRING_DATASOURCE_PASSWORD: ${FEE_DB_PASSWORD}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    depends_on:
+      - fee-db
+
+  notification-service:
+    build:
+      context: ./notification-service
+    container_name: nextrade-notification-service
+    ports:
+      - "9006:9006"
+    environment:
+      SERVER_PORT: 9006
+      EXCHANGE_WS_HOST: ${EXCHANGE_WS_URI:-ws://localhost:8080/ws}
+      EXCHANGE_API_KEY: ${EXCHANGE_API_KEY:-dev-exchange-key}
+      EXCHANGE_API_SECRET: ${EXCHANGE_API_SECRET:-dev-exchange-secret}
+      EXCHANGE_REST_URL: ${EXCHANGE_REST_URL:-http://localhost:8080/api/v1}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: http://localhost:5174,http://localhost:5175
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      ORDER_SERVICE_URL: http://order-service:9003
+    depends_on:
+      - order-service
+
+  auth-db:
+    image: postgres:17
+    container_name: nextrade-auth-db
+    environment:
+      POSTGRES_DB: lynx_auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+    volumes:
+      - nextrade_auth_db_data:/var/lib/postgresql/data
+
+  wallet-db:
+    image: postgres:17
+    container_name: nextrade-wallet-db
+    environment:
+      POSTGRES_DB: lynx_wallet_db
+      POSTGRES_USER: wallet_user
+      POSTGRES_PASSWORD: ${WALLET_DB_PASSWORD}
+    volumes:
+      - nextrade_wallet_db_data:/var/lib/postgresql/data
+
+  order-db:
+    image: postgres:17
+    container_name: nextrade-order-db
+    environment:
+      POSTGRES_DB: lynx_order_db
+      POSTGRES_USER: order_user
+      POSTGRES_PASSWORD: ${ORDER_DB_PASSWORD}
+    volumes:
+      - nextrade_order_db_data:/var/lib/postgresql/data
+
+  portfolio-db:
+    image: postgres:17
+    container_name: nextrade-portfolio-db
+    environment:
+      POSTGRES_DB: lynx_portfolio_db
+      POSTGRES_USER: portfolio_user
+      POSTGRES_PASSWORD: ${PORTFOLIO_DB_PASSWORD}
+    volumes:
+      - nextrade_portfolio_db_data:/var/lib/postgresql/data
+
+  fee-db:
+    image: postgres:17
+    container_name: nextrade-fee-db
+    environment:
+      POSTGRES_DB: lynx_fee_db
+      POSTGRES_USER: fee_user
+      POSTGRES_PASSWORD: ${FEE_DB_PASSWORD}
+    volumes:
+      - nextrade_fee_db_data:/var/lib/postgresql/data
+
+volumes:
+  nextrade_auth_db_data:
+  nextrade_wallet_db_data:
+  nextrade_order_db_data:
+  nextrade_portfolio_db_data:
+  nextrade_fee_db_data:
