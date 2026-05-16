@@ -6,8 +6,8 @@ services:
     ports:
       - "5174:5174"
     environment:
-      VITE_API_BASE_URL: http://localhost:9000/api
-      VITE_NOTIFICATION_WS_URL: ws://localhost:9006
+      VITE_API_BASE_URL: /api
+      VITE_NOTIFICATION_WS_URL: /ws/notifications
     depends_on:
       - api-gateway
 
@@ -27,6 +27,7 @@ services:
       SERVICES_NOTIFICATION_URL: http://notification-service:9006
       JWT_SECRET: ${JWT_SECRET}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:[*],http://127.0.0.1:[*],http://192.168.*.*:[*],http://10.*.*.*:[*],http://172.*.*.*:[*]}
     depends_on:
       - auth-service
       - wallet-service
@@ -48,7 +49,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-      APP_COOKIE_SECURE: "false"
+      COOKIE_SECURE: "false"
     depends_on:
       - auth-db
 
@@ -127,12 +128,12 @@ services:
       - "9006:9006"
     environment:
       SERVER_PORT: 9006
-      EXCHANGE_WS_HOST: ${EXCHANGE_WS_URI:-ws://localhost:8080/ws}
+      EXCHANGE_WS_HOST: ${EXCHANGE_WS_URI:-ws://websocket-server:8080/ws}
       EXCHANGE_API_KEY: ${EXCHANGE_API_KEY:-dev-exchange-key}
       EXCHANGE_API_SECRET: ${EXCHANGE_API_SECRET:-dev-exchange-secret}
       EXCHANGE_REST_URL: ${EXCHANGE_REST_URL:-http://localhost:8080/api/v1}
       JWT_SECRET: ${JWT_SECRET}
-      CORS_ALLOWED_ORIGINS: http://localhost:5174,http://localhost:5175
+      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:[*],http://127.0.0.1:[*],http://192.168.*.*:[*],http://10.*.*.*:[*],http://172.*.*.*:[*]}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       ORDER_SERVICE_URL: http://order-service:9003
     networks:
